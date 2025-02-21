@@ -32,21 +32,22 @@ router.post('/', [
         if(endUser){
             return res.status(400).json({reqErrors: [{msg: "End User email already exists"}]})
         }
-    } catch (error) {
-        
-    }
-    const newEndUser = new EndUser();
-    newEndUser.name = tempEndUser.name;
-    newEndUser.email = tempEndUser.email;
-    newEndUser.password = tempEndUser.password;
-try {
-    await newEndUser.save();
-    res.status(201).json("succesfully inserted");
-} catch (error) {
-    res.send(error.message).status(400);
-}
-    
-}
 
+        const newEndUser = new EndUser();
+
+        // Encrypt password
+        // create salt - number of encryption it goes through
+        const salt = await bcrypt.genSalt(10)
+        // hash the password using salt
+        newEndUser.password = await bcrypt.hash(tempEndUser.password, salt);
+        newEndUser.name = tempEndUser.name;
+        newEndUser.email = tempEndUser.email;
+        await newEndUser.save();
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({reqErrors:[{msg:"server error"}]})
+    }  
+   
+}
 );
 export default router;
