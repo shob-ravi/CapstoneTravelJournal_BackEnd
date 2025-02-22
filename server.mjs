@@ -16,9 +16,12 @@ app.use(express.json());
 
 // Importing the routes
 import EnduserRoute from './routes/endUsers.mjs';
+import JournalEntryRoute from './routes/journalentry.mjs';
+import authRoute from './routes/auth.mjs';
 // Attaching and associating routers to specific url paths
 app.use('/api/endusers',EnduserRoute);
-
+app.use('/api/journal', JournalEntryRoute);
+app.use('/api/auth',authRoute);
 
 
 // server
