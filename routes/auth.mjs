@@ -8,7 +8,7 @@ import jwt from 'jsonwebtoken';
 const router = express.Router();
 // @route: GET /api/auth
 // @desc: authenticate user
-// @access: private
+// @access: private/Routes that you should be signed in to see
 router.get('/', auth, async (req, res) => {
     try {
         // Get user info from DB user user ID from req.user(we gave this in our middleware)

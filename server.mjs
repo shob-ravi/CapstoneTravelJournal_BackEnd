@@ -2,7 +2,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import ConnectMongoDB from './db/connection.mjs';
-
+import cors from 'cors';
 
 // setup
 const app = express();
@@ -13,6 +13,7 @@ const PORT = process.env.PORT;
 ConnectMongoDB();
 // middleware
 app.use(express.json());
+app.use(cors());
 
 // Importing the routes
 import EnduserRoute from './routes/endUsers.mjs';
