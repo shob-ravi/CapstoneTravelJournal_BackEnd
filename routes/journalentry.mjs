@@ -4,6 +4,7 @@ import uploadToCloudinary from '../cloudinary.mjs';
 import removeFromCloudinary from '../cloudinary.mjs';
 import JournalEntry from '../models/JournalEntry.mjs';
 import { check, validationResult } from 'express-validator';
+import auth from '../middleware/auth.mjs';
 
 
 const router = express.Router();
@@ -108,7 +109,21 @@ router.delete('/:id', async (req, res) => {
     }
 
 });
-// @route: GET api/journal
-// @desc: Delete Journal Entry
-// @access: public
+// @route: GET /api/journal
+// @desc: authenticate user
+// @access: private/Routes that you should be signed in to see
+router.get('/', auth, async (req, res) => {
+    try {
+        console.log('req.user.id'+req.user.id);
+        // Get user info from DB user user ID from req.user(we gave this in our middleware)
+        // we dont want to send the password to the front end so we did select('-password')
+        const journals = await JournalEntry.find({CreatedBy:req.user.id}).populate('CreatedBy','-password');
+        console.log('journals'+journals);
+        res.json(journals);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ reqErrors: [{ msg: "Server error" }] });
+    }
+});
 export default router;
