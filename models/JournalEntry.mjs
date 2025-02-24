@@ -9,6 +9,9 @@ const JournalSchema = new mongoose.Schema({
         type:String,
         required:true
     },
+    publicId:{
+        type:String
+    },
     ImageURL:{
         type:String,
         required:true
