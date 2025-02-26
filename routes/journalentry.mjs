@@ -13,26 +13,29 @@ const router = express.Router();
 // @desc: Create Journal Entry
 // @access: public
 
-router.post('/', upload.single("Image"), [
+router.post('/', auth, upload.single("Image"), [
     check('Title', 'Title is required').not().isEmpty(),
     check('Description', 'Description is required').not().isEmpty(),
     check('Location', 'Location is required').not().isEmpty()
 
 ], async (req, res) => {
-
     let reqErrors = validationResult(req)
     if (!reqErrors.isEmpty()) {
         return res.json({ reqErrors: reqErrors.array() })
     }
     try {
-        const { Title, Description, Location, CreatedBy } = req.body;
+        const userId = req.user.id;
+        if  (!userId || userId.trim() === "")  {
+            return res.status(400).json({ reqErrors: [{ msg: "cannot create new journals" }] });
+        }
 
+        
         // save image url and public id to the database
         const newJournal = new JournalEntry()
-        newJournal.Title = Title;
-        newJournal.Description = Description;
-        newJournal.Location = Location;
-        newJournal.CreatedBy = CreatedBy;
+        newJournal.Title = req.body.Title;
+        newJournal.Description = req.body.Description;
+        newJournal.Location = req.body.Location;
+        newJournal.CreatedBy = userId === "" ? req.body.CreatedBy : userId;
 
         if (req.file) {
             // upload image to cloudinary
@@ -42,10 +45,10 @@ router.post('/', upload.single("Image"), [
             await newJournal.save();
             res.status(200).json("Journal Entry created successfully");
         }
-        else{
+        else {
             res.status(400).json({ reqErrors: [{ msg: "No image file to Upload" }] });
         }
-        
+
 
     } catch (error) {
         console.error(error);
@@ -60,11 +63,11 @@ router.post('/', upload.single("Image"), [
 router.patch('/:id', upload.single("Image"), async (req, res) => {
 
     try {
-        
+        console.log('req.body'+req.body);
         const journalId = req.params.id;
         const journal = await JournalEntry.findById(journalId);
         if (!journal) return res.status(404).json({ msg: 'Journal not found' });
-
+        console.log('req.body'+req.body);
         const { Title, Description, Location } = req.body;
         journal.Title = Title;
         journal.Description = Description;
@@ -90,9 +93,11 @@ router.patch('/:id', upload.single("Image"), async (req, res) => {
 // @access: public
 router.delete('/:id', async (req, res) => {
     try {
+        console.log("Inside Delete");
         const journalId = req.params.id;
         const journal = await JournalEntry.findById(journalId);
 
+        console.log("req.params.id" + req.params.id);
 
         if (!journal) return res.status(404).json({ msg: 'Journal not found' });
 
@@ -114,11 +119,25 @@ router.delete('/:id', async (req, res) => {
 // @access: private/Routes that you should be signed in to see
 router.get('/', auth, async (req, res) => {
     try {
-        console.log('req.user.id'+req.user.id);
         // Get user info from DB user user ID from req.user(we gave this in our middleware)
         // we dont want to send the password to the front end so we did select('-password')
-        const journals = await JournalEntry.find({CreatedBy:req.user.id}).populate('CreatedBy','-password');
-        console.log('journals'+journals);
+        const journals = await JournalEntry.find({ CreatedBy: req.user.id }).select('-password');
+        res.json(journals);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ reqErrors: [{ msg: "Server error" }] });
+    }
+});
+
+// @route: GET /api/journal/id
+// @desc: authenticate user
+// @access: private/Routes that you should be signed in to see
+router.get('/:id', auth, async (req, res) => {
+    try {
+        // Get user info from DB user user ID from req.user(we gave this in our middleware)
+        // we dont want to send the password to the front end so we did select('-password')
+        const journals = await JournalEntry.find({ _id: req.params.id }).select('-password');
         res.json(journals);
 
     } catch (error) {
