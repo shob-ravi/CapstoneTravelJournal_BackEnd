@@ -38,8 +38,11 @@ router.post('/', auth, upload.single("Image"), [
         newJournal.CreatedBy = userId === "" ? req.body.CreatedBy : userId;
 
         if (req.file) {
+            console.log("req.file.path"+req.file.path);
             // upload image to cloudinary
             const data = await uploadToCloudinary(req.file.path, "Journal-Images");
+            console.log('data'+data);
+            console.log('data.public_id'+data.public_id);
             newJournal.publicId = data.public_id;
             newJournal.ImageURL = data.url;
             await newJournal.save();
@@ -103,6 +106,7 @@ router.delete('/:id', async (req, res) => {
 
         //   Find public id
         const publicId = journal.publicId;
+        console.log('publicId'+publicId);
         await removeFromCloudinary(publicId);
         await JournalEntry.findByIdAndDelete(journalId);
         res.status(200).json("Journal Entry deleted successfully");
